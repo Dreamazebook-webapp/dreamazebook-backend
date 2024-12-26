@@ -100,6 +100,21 @@ class BookController extends Controller
         return response()->json($books);
     }
 
+    public function getAllBooks()
+    {
+        $books = DB::table('picbook')
+            ->where('pid', 0)
+            ->get()
+            ->map(function ($book) {
+                $book->showpic = asset($book->showpic);
+                return $book;
+            });
+
+        return response()->json($books);
+    }
+
+
+
     /**
      * 通用的递归构建树方法
      *

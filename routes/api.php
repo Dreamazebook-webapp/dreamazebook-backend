@@ -9,6 +9,9 @@ use App\Http\Controllers\PreviewController;
 // 获取分类信息
 Route::get('/categories', [IndexController::class, 'categories']);
 
+//获取所有图书
+Route::get('/books', [BookController::class, 'getAllBooks']);
+
 // 获取书籍详情
 Route::get('/books/{id}', [BookController::class, 'showBook']);
 
