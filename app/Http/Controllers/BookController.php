@@ -171,7 +171,11 @@ class BookController extends Controller
         $pagepics = DB::table('bookpics')
             ->where('pbid', $id)
             ->orderBy('pagenum')
-            ->get();
+            ->get()
+            ->map(function ($pagepic) {
+                $pagepic->pagepic = asset($pagepic->pagepic);
+                return $pagepic;
+        });
 
         // 示例：加载推荐书籍
         $recommendedBooks = DB::table('picbook')
