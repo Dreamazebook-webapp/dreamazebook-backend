@@ -183,10 +183,17 @@ class BookController extends Controller
             ->limit(5)
             ->get();
 
+        // 查询与绘本相关的标签
+        $tags = DB::table('tags')
+        ->join('book2tag', 'tags.id', '=', 'book2tag.tid')
+        ->where('book2tag.pbid', $id)
+        ->pluck('tname'); // 只获取标签名称
+
         return response()->json([
             'book' => $book,
             'recommendedBooks' => $recommendedBooks,
             'pagepics' => $pagepics,
+            'tags' => $tags,
         ]);
     }
 
