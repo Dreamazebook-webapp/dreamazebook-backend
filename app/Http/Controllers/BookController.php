@@ -179,21 +179,38 @@ class BookController extends Controller
 
         // 示例：加载推荐书籍
         $recommendedBooks = DB::table('picbook')
-            ->where('pid', $book->id) // 假设推荐书籍是同一父级的子级
+            ->where('pid', $id) // 假设推荐书籍是同一父级的子级
             ->limit(5)
             ->get();
 
         // 查询与绘本相关的标签
         $tags = DB::table('tags')
-        ->join('book2tag', 'tags.id', '=', 'book2tag.tid')
-        ->where('book2tag.pbid', $id)
-        ->pluck('tname'); // 只获取标签名称
+            ->join('book2tag', 'tags.id', '=', 'book2tag.tid')
+            ->where('book2tag.pbid', $id)
+            ->pluck('tname'); // 只获取标签名称
+
+        // 查询与绘本相关的评论
+        $reviews = DB::table('reviews')
+            ->join('book2reviews', 'reviews.id', '=', 'book2reviews.review_id')
+            ->where('book2reviews.book_id', $id)
+            ->select('reviews.reviewer_name', 'reviews.rating', 'reviews.comment', DB::raw("DATE_FORMAT(reviews.review_date, '%m/%Y') as review_date"))
+            ->get();
+
+        // 查询与绘本相关的关键词
+        $keywords = DB::table('keywords')
+            ->join('book2keywords', 'keywords.id', '=', 'book2keywords.keyword_id')
+            ->where('book2keywords.book_id', $id)
+            ->select('keywords.keyword', 'book2keywords.count as count') // 直接使用 counts 字段
+            ->orderByDesc('count') // 按 counts 字段降序排列
+            ->get();
 
         return response()->json([
             'book' => $book,
             'recommendedBooks' => $recommendedBooks,
             'pagepics' => $pagepics,
             'tags' => $tags,
+            'reviews' => $reviews,
+            'keywords' => $keywords,
         ]);
     }
 
