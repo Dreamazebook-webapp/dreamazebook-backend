@@ -5,6 +5,7 @@ use App\Http\Controllers\IndexController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\PersonalizeController;
 use App\Http\Controllers\PreviewController;
+use App\Http\Controllers\StripeController;
 
 // 获取分类信息
 Route::get('/categories', [IndexController::class, 'categories']);
@@ -23,6 +24,8 @@ Route::get('/personalize', [PersonalizeController::class, 'showCharacterForm']);
 Route::post('/personalize/save', [PersonalizeController::class, 'saveCharacterInfo']);
 Route::get('/personalize/preview/{bookid}', [PreviewController::class, 'previewBook']);
 
+Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
+Route::post('/process-payment', [StripeController::class, 'processPayment']);
 
 //new
 // 图片处理路由
