@@ -5,6 +5,10 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Exceptions\ApiExceptionHandler;
 use App\Providers\RouteServiceProvider;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\CheckUserType;
+use App\Http\Middleware\ForceJsonResponse;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,12 +19,16 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->use([
-            \App\Http\Middleware\ForceJsonResponse::class,
-            \App\Http\Middleware\SetLocale::class,
+            ForceJsonResponse::class,
+            SetLocale::class,
+            // CheckUserType::class,
+        ]);
+        $middleware->alias([
+            'check.user.type' => CheckUserType::class
         ]);
 
         $middleware->group('api', [
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            SubstituteBindings::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

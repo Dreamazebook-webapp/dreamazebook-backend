@@ -9,26 +9,7 @@ use App\Http\Controllers\StripeController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Api\LanguageController;
-
-// 获取分类信息
-Route::get('/categories', [IndexController::class, 'categories']);
-
-// 获取某个分类及其图书
-Route::get('/categories/{id}', [CategoryController::class, 'getBooksByCategory']);
-
-//获取所有图书
-Route::get('/books', [BookController::class, 'getAllBooks']);
-
-// 获取书籍详情
-Route::get('/books/{id}', [BookController::class, 'showBook']);
-
-// 个性化设置
-Route::get('/personalize', [PersonalizeController::class, 'showCharacterForm']);
-Route::post('/personalize/save', [PersonalizeController::class, 'saveCharacterInfo']);
-Route::get('/personalize/preview/{bookid}', [PreviewController::class, 'previewBook']);
-
-Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
-Route::post('/process-payment', [StripeController::class, 'processPayment']);
+use App\Http\Controllers\Api\Admin\PicbookController as AdminPicbookController;
 
 //new
 // 图片处理路由
@@ -72,29 +53,28 @@ Route::prefix('files')->middleware(['auth:sanctum'])->group(function () {
 //     Route::get('/{picbook}/pages', [PicbookController::class, 'getPages']);
 // });
 
-// 后台认证路由
-// Route::prefix('admin')->group(function () {
-//     Route::post('login', [LoginController::class, 'adminLogin']);
-//     Route::middleware(['auth:sanctum', 'admin.check'])->group(function () {
-//         Route::get('me', [LoginController::class, 'adminMe']);
-//     });
-// });
-
 // 所有需要管理员权限的路由
 Route::prefix('admin')->group(function () {
+    // Admin Auth Routes
+    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::middleware(['auth:sanctum', 'check.user.type:admin'])->group(function () {
+        Route::post('/logout', [AdminAuthController::class, 'logout']);
+        Route::get('me', [LoginController::class, 'adminMe']);
+        // Add other admin routes here
+    });
     // 后台文件上传路由
     // Route::prefix('files')->group(function () {
     //     Route::post('upload', [FileController::class, 'adminUpload']);
     //     Route::delete('delete', [FileController::class, 'destroy']);
     // });
 
-    // 后台绘本管理路由
-    // Route::prefix('picbooks')->group(function () {
-    //     Route::get('trashed', [AdminPicbookController::class, 'trashed']);
-    //     Route::post('{id}/restore', [AdminPicbookController::class, 'restore']);
-    //     Route::delete('{id}/force', [AdminPicbookController::class, 'forceDelete']);
-    //     Route::apiResource('/', AdminPicbookController::class);
-    // });
+    //后台绘本管理路由
+    Route::prefix('picbooks')->middleware(['auth:sanctum', 'check.user.type:admin'])->group(function () {
+        Route::get('trashed', [AdminPicbookController::class, 'trashed']);
+        Route::post('{id}/restore', [AdminPicbookController::class, 'restore']);
+        Route::delete('{id}/force', [AdminPicbookController::class, 'forceDelete']);
+        Route::apiResource('/', AdminPicbookController::class);
+    });
 
     // // 后台绘本页面管理路由
     // Route::prefix('picbook-pages')->group(function () {
@@ -116,13 +96,6 @@ Route::prefix('admin')->group(function () {
     //     Route::post('/{variant}/activate', [AdminPicbookVariantController::class, 'activate']);
     //     Route::post('/{variant}/deactivate', [AdminPicbookVariantController::class, 'deactivate']);
     // });
-
-    // Admin Auth Routes
-    Route::post('/auth/login', [AdminAuthController::class, 'login']);
-    Route::middleware(['auth:sanctum', 'check.user.type:admin'])->group(function () {
-        Route::post('/auth/logout', [AdminAuthController::class, 'logout']);
-        // Add other admin routes here
-    });
 });
 
 // 语言切换路由

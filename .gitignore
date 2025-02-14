@@ -22,3 +22,5 @@ yarn-error.log
 /.vscode
 /.zed
 .DS_Store
+*/.DS_Store
+**/.DS_Store  # 忽略所有目录下的.DS_Store
