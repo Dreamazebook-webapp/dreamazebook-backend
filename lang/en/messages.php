@@ -2,10 +2,10 @@
 
 return [
     'language_switched' => 'Language switched successfully',
-    'validation_error' => 'Validation error',
+    'validation_error' => 'Data validation failed',
     'route_not_found' => 'Route not found.',
     'method_not_allowed' => 'The :method method is not supported for route :route. Supported methods: :allowed_methods.',
-    'server_error' => 'Internal Server Error',
+    'server_error' => 'Internal server error, please try again later',
     'unauthorized' => 'Unauthorized',
     'forbidden' => 'Forbidden',
     'bad_request' => 'Bad Request',
@@ -25,4 +25,5 @@ return [
         'unique' => 'The :attribute has already been taken',
         'confirmed' => 'The :attribute confirmation does not match',
     ],
+    'database_error' => 'Database operation failed',
 ];

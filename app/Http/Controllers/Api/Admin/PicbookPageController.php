@@ -31,7 +31,8 @@ class PicbookPageController extends Controller
         //是否需要分页
         // $perPage = $request->input('per_page', 15);
         // return $query->orderBy('page_number')->paginate($perPage);
-        return $query->orderBy('page_number')->get();
+        // return $query->orderBy('page_number')->get();
+        return $this->paginate($query->orderBy('page_number')->get(), __('picbook.page.list_success'));
     }
 
     public function store(Request $request, Picbook $picbook)
@@ -61,14 +62,16 @@ class PicbookPageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => '验证失败',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error(
+                __('messages.validation_error'),
+                $validator->errors(),
+                422
+            );
         }
 
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
+            
             $validated = $validator->validated();
             
             // 创建页面
@@ -98,13 +101,14 @@ class PicbookPageController extends Controller
             }
 
             DB::commit();
-            return response()->json($page->load('translations'), 201);
+            return $this->success($page, __('picbook.page.create_success'), 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'message' => '创建失败',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error(
+                __('picbook.page.create_failed'),
+                ['error' => $e->getMessage()],
+                500
+            );
         }
     }
 
@@ -184,14 +188,15 @@ class PicbookPageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => '验证失败',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error(
+                __('messages.validation_error'),
+                $validator->errors(),
+                422
+            );
         }
 
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $data = $validator->validated();
 
             // 处理新上传的图片
@@ -264,10 +269,15 @@ class PicbookPageController extends Controller
             $page->translations()->delete();
             $page->delete();
             DB::commit();
-            return response()->json(null, 204);
+            
+            return $this->success(null, __('picbook.page.delete_success'), 204);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => '删除失败'], 500);
+            return $this->error(
+                __('picbook.page.delete_failed'),
+                ['error' => $e->getMessage()],
+                500
+            );
         }
     }
 
@@ -284,10 +294,17 @@ class PicbookPageController extends Controller
             $page->translations()->withTrashed()->restore();
             
             DB::commit();
-            return response()->json($page->load('translations'), 200);
+            return $this->success(
+                $page->load('translations'),
+                __('picbook.page.restore_success')
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => '恢复失败'], 500);
+            return $this->error(
+                __('picbook.page.restore_failed'),
+                ['error' => $e->getMessage()],
+                500
+            );
         }
     }
 
@@ -304,10 +321,14 @@ class PicbookPageController extends Controller
             $page->forceDelete();
             
             DB::commit();
-            return response()->json(null, 204);
+            return $this->success(null, __('picbook.page.force_delete_success'), 204);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => '永久删除失败'], 500);
+            return $this->error(
+                __('picbook.page.force_delete_failed'), 
+                ['error' => $e->getMessage()], 
+                500
+            );
         }
     }
 
@@ -315,7 +336,7 @@ class PicbookPageController extends Controller
     {
         // 检查语言是否被支持
         if (!$page->picbook->supportsLanguage($language)) {
-            return response()->json(['message' => '不支持的语言'], 422);
+            return $this->error(__('picbook.page.language_not_supported'), null, 422);
         }
 
         $validator = Validator::make($request->all(), [
@@ -324,15 +345,74 @@ class PicbookPageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->error(
+                __('messages.validation_error'),
+                $validator->errors(),
+                422
+            );
         }
 
-        $translation = $page->translations()->updateOrCreate(
-            ['language' => $language],
-            $validator->validated()
-        );
+        try {
+            DB::beginTransaction();
 
-        return $translation;
+            $translation = $page->translations()->updateOrCreate(
+                ['language' => $language],
+                $validator->validated()
+            );
+
+            DB::commit();
+            return $this->success($translation, __('picbook.page.translation_update_success'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(
+                __('picbook.page.translation_update_failed'), 
+                ['error' => $e->getMessage()], 
+                500
+            );
+        }
+    }
+
+    public function getTranslation(PicbookPage $page, string $language)
+    {
+        // 检查语言是否被支持
+        if (!$page->picbook->supportsLanguage($language)) {
+            return $this->error(__('picbook.page.language_not_supported'), null, 422);
+        }
+
+        $translation = $page->translations()->where('language', $language)->first();
+        if (!$translation) {
+            return $this->error(__('picbook.page.translation_not_found'), null, 404);
+        }
+
+        return $this->success($translation, __('picbook.page.translation_detail_success'));
+    }
+
+    public function deleteTranslation(PicbookPage $page, string $language)
+    {
+        // 检查语言是否被支持
+        if (!$page->picbook->supportsLanguage($language)) {
+            return $this->error(__('picbook.page.language_not_supported'), null, 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $deleted = $page->translations()->where('language', $language)->delete();
+            if (!$deleted) {
+                DB::rollBack();
+                return $this->error(__('picbook.page.translation_not_found'), null, 404);
+            }
+
+            DB::commit();
+            return $this->success(null, __('picbook.page.translation_delete_success'), 204);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(
+                __('picbook.page.translation_delete_failed'), 
+                ['error' => $e->getMessage()], 
+                500
+            );
+        }
     }
 
     public function publish(PicbookPage $page)
@@ -344,66 +424,95 @@ class PicbookPageController extends Controller
         );
 
         if (!empty($missingLanguages)) {
-            return response()->json([
-                'message' => '缺少以下语言的翻译',
-                'languages' => $missingLanguages
-            ], 422);
+            return $this->error(
+                __('picbook.page.missing_translations'),
+                ['languages' => $missingLanguages],
+                422
+            );
         }
 
-        $page->publish();
-        return $page;
+        try {
+            $page->publish();
+            return $this->success($page, __('picbook.page.publish_success'));
+        } catch (\Exception $e) {
+            return $this->error(
+                __('picbook.page.publish_failed'),
+                ['error' => $e->getMessage()],
+                500
+            );
+        }
     }
 
     public function hide(PicbookPage $page)
     {
-        $page->hide();
-        return $page;
+        try {
+            $page->hide();
+            return $this->success($page, __('picbook.page.hide_success'));
+        } catch (\Exception $e) {
+            return $this->error(
+                __('picbook.page.hide_failed'),
+                ['error' => $e->getMessage()],
+                500
+            );
+        }
     }
 
     // 批量创建变体页面
     public function createVariants(Request $request, PicbookPage $page)
     {
-        $picbook = $page->picbook;
-        $variants = [];
+        try {
+            DB::beginTransaction();
 
-        foreach ($picbook->supported_genders as $gender) {
-            foreach ($picbook->supported_skincolors as $skincolor) {
-                // 跳过原始页面的组合
-                if ($gender == $page->gender && $skincolor == $page->skincolor) {
-                    continue;
-                }
+            $picbook = $page->picbook;
+            $variants = [];
 
-                // 检查是否已存在
-                $exists = $picbook->pages()
-                    ->where('page_number', $page->page_number)
-                    ->where('gender', $gender)
-                    ->where('skincolor', $skincolor)
-                    ->exists();
-
-                if (!$exists) {
-                    $variantPage = $page->replicate();
-                    $variantPage->gender = $gender;
-                    $variantPage->skincolor = $skincolor;
-                    $variantPage->image_url = str_replace(
-                        "_{$page->gender}_{$page->skincolor}.",
-                        "_{$gender}_{$skincolor}.",
-                        $page->image_url
-                    );
-                    $variantPage->save();
-
-                    // 复制翻译
-                    foreach ($page->translations as $translation) {
-                        $variantPage->translations()->create($translation->toArray());
+            foreach ($picbook->supported_genders as $gender) {
+                foreach ($picbook->supported_skincolors as $skincolor) {
+                    // 跳过原始页面的组合
+                    if ($gender == $page->gender && $skincolor == $page->skincolor) {
+                        continue;
                     }
 
-                    $variants[] = $variantPage;
+                    // 检查是否已存在
+                    $exists = $picbook->pages()
+                        ->where('page_number', $page->page_number)
+                        ->where('gender', $gender)
+                        ->where('skincolor', $skincolor)
+                        ->exists();
+
+                    if (!$exists) {
+                        $variantPage = $page->replicate();
+                        $variantPage->gender = $gender;
+                        $variantPage->skincolor = $skincolor;
+                        $variantPage->image_url = str_replace(
+                            "_{$page->gender}_{$page->skincolor}.",
+                            "_{$gender}_{$skincolor}.",
+                            $page->image_url
+                        );
+                        $variantPage->save();
+
+                        // 复制翻译
+                        foreach ($page->translations as $translation) {
+                            $variantPage->translations()->create($translation->toArray());
+                        }
+
+                        $variants[] = $variantPage;
+                    }
                 }
             }
-        }
 
-        return response()->json([
-            'message' => '变体创建成功',
-            'variants' => $variants
-        ]);
+            DB::commit();
+            return $this->success(
+                ['variants' => $variants],
+                __('picbook.page.variants_create_success')
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error(
+                __('picbook.page.variants_create_failed'),
+                ['error' => $e->getMessage()],
+                500
+            );
+        }
     }
 } 

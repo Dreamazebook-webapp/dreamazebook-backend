@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Picbook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\ApiResponse;
+use Illuminate\Support\Facades\App;
 
 class PicbookController extends Controller
 {
+    use ApiResponse;
+
     // 前台列表，只显示已发布的绘本
     public function index(Request $request)
     {
@@ -20,29 +24,40 @@ class PicbookController extends Controller
             $query->withTag($request->tag);
         }
 
-        // 加载关联数据
-        $query->with(['translations']);
+        // 加载当前语言的翻译
+        $query->with(['translations' => function($query) {
+            $query->where('language', App::getLocale());
+        }]);
 
         // 分页
         $perPage = $request->input('per_page', 15);
-        return $query->paginate($perPage);
+        return $this->success(
+            $query->paginate($perPage),
+            __('picbook.list_success')
+        );
     }
 
     // 前台详情，只显示基本信息
     public function show(Request $request, Picbook $picbook)
     {
         if ($picbook->status !== Picbook::STATUS_PUBLISHED) {
-            return response()->json(['message' => '绘本不存在'], 404);
+            return $this->error(__('picbook.not_found'), null, 404);
         }
 
-        return $picbook->load(['translations']);
+        // 加载当前语言的翻译
+        return $this->success(
+            $picbook->load(['translations' => function($query) {
+                $query->where('language', App::getLocale());
+            }]),
+            __('picbook.detail_success')
+        );
     }
 
     // 获取指定语言和特征的变体
     public function getVariant(Request $request, Picbook $picbook)
     {
         if ($picbook->status !== Picbook::STATUS_PUBLISHED) {
-            return response()->json(['message' => '绘本不存在'], 404);
+            return $this->error(__('picbook.not_found'), null, 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -52,33 +67,37 @@ class PicbookController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->error(
+                __('validation.failed'),
+                $validator->errors(),
+                422
+            );
         }
 
         // 检查是否支持请求的特征
         if (!$picbook->supportsLanguage($request->language)) {
-            return response()->json(['message' => '不支持的语言'], 422);
+            return $this->error(__('picbook.language_not_supported'), null, 422);
         }
         if (!$picbook->supportsGender($request->gender)) {
-            return response()->json(['message' => '不支持的性别'], 422);
+            return $this->error(__('picbook.gender_not_supported'), null, 422);
         }
         if (!$picbook->supportsSkinColor($request->skincolor)) {
-            return response()->json(['message' => '不支持的肤色'], 422);
+            return $this->error(__('picbook.skincolor_not_supported'), null, 422);
         }
 
         $variant = $picbook->getVariant($request->language, $request->gender, $request->skincolor);
         if (!$variant) {
-            return response()->json(['message' => '未找到对应的变体'], 404);
+            return $this->error(__('picbook.variant_not_found'), null, 404);
         }
 
-        return $variant;
+        return $this->success($variant, __('picbook.variant_success'));
     }
 
     // 获取绘本的页面及其翻译
     public function getPages(Request $request, Picbook $picbook)
     {
         if ($picbook->status !== Picbook::STATUS_PUBLISHED) {
-            return response()->json(['message' => '绘本不存在'], 404);
+            return $this->error(__('picbook.not_found'), null, 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -88,11 +107,15 @@ class PicbookController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->error(
+                __('validation.failed'),
+                $validator->errors(),
+                422
+            );
         }
 
         if (!$picbook->supportsLanguage($request->language)) {
-            return response()->json(['message' => '不支持的语言'], 422);
+            return $this->error(__('picbook.language_not_supported'), null, 422);
         }
         $pages = $picbook->pages()
             ->where('gender', $request->gender)
@@ -103,6 +126,6 @@ class PicbookController extends Controller
             }])
             ->get();
 
-        return $pages;
+        return $this->success($pages, __('picbook.pages_success'));
     }
 } 

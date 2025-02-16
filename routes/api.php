@@ -1,15 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\IndexController;
-use App\Http\Controllers\BookController;
-use App\Http\Controllers\PersonalizeController;
-use App\Http\Controllers\PreviewController;
-use App\Http\Controllers\StripeController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\Api\Admin\PicbookController as AdminPicbookController;
+use App\Http\Controllers\Api\PicbookController;
+use App\Http\Controllers\Api\Admin\PicbookVariantController;
+use App\Http\Controllers\Api\Admin\PicbookTranslationController;
 
 //new
 // 图片处理路由
@@ -19,9 +18,9 @@ Route::post('/image/merge', [ImageController::class, 'merge']);
 
 Route::middleware(['web', 'auth'])->group(function () {
     // AI换脸相关API
-    Route::post('/aiface/upload', [AiFaceController::class, 'upload']);
-    Route::post('/aiface/process', [AiFaceController::class, 'process']);
-    Route::get('/aiface/status/{taskId}', [AiFaceController::class, 'status']);
+    // Route::post('/aiface/upload', [AiFaceController::class, 'upload']);
+    // Route::post('/aiface/process', [AiFaceController::class, 'process']);
+    // Route::get('/aiface/status/{taskId}', [AiFaceController::class, 'status']);
 });
 
 // 前台认证路由
@@ -46,12 +45,12 @@ Route::prefix('files')->middleware(['auth:sanctum'])->group(function () {
 });
 
 // 前台其他路由...
-// Route::prefix('picbooks')->group(function () {
-//     Route::get('/', [PicbookController::class, 'index']);
-//     Route::get('/{picbook}', [PicbookController::class, 'show']);
-//     Route::get('/{picbook}/variant', [PicbookController::class, 'getVariant']);
-//     Route::get('/{picbook}/pages', [PicbookController::class, 'getPages']);
-// });
+Route::prefix('picbooks')->group(function () {
+    Route::get('/', [PicbookController::class, 'index']);
+    Route::get('/{picbook}', [PicbookController::class, 'show']);
+    Route::get('/{picbook}/variant', [PicbookController::class, 'getVariant']);
+    Route::get('/{picbook}/pages', [PicbookController::class, 'getPages']);
+});
 
 // 所有需要管理员权限的路由
 Route::prefix('admin')->group(function () {
@@ -59,8 +58,31 @@ Route::prefix('admin')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login']);
     Route::middleware(['auth:sanctum', 'check.user.type:admin'])->group(function () {
         Route::post('/logout', [AdminAuthController::class, 'logout']);
-        Route::get('me', [LoginController::class, 'adminMe']);
+        Route::get('me', [AdminAuthController::class, 'adminMe']);
         // Add other admin routes here
+        //后台绘本管理路由
+        Route::prefix('picbooks')->group(function () {
+            Route::get('trashed', [AdminPicbookController::class, 'trashed']);
+            // Route::post('{id}/restore', [AdminPicbookController::class, 'restore']);
+            // Route::delete('{id}/force', [AdminPicbookController::class, 'forceDelete']);
+            Route::apiResource('', AdminPicbookController::class)->parameters(['' => 'picbook']);
+        });
+
+        // 绘本变体管理路由
+        Route::prefix('picbooks/{picbook}/variants')->group(function () {
+            Route::post('/', [PicbookVariantController::class, 'store']);
+            Route::put('{variant}', [PicbookVariantController::class, 'update']);
+            Route::delete('{variant}', [PicbookVariantController::class, 'destroy']);
+            Route::post('{variant}/activate', [PicbookVariantController::class, 'activate']);
+            Route::post('{variant}/deactivate', [PicbookVariantController::class, 'deactivate']);
+        });
+
+        // 绘本翻译管理路由
+        Route::prefix('picbooks/{picbook}/translations')->group(function () {
+            Route::post('/', [PicbookTranslationController::class, 'store']);
+            Route::put('{translation}', [PicbookTranslationController::class, 'update']);
+            Route::delete('{translation}', [PicbookTranslationController::class, 'destroy']);
+        });
     });
     // 后台文件上传路由
     // Route::prefix('files')->group(function () {
@@ -69,12 +91,12 @@ Route::prefix('admin')->group(function () {
     // });
 
     //后台绘本管理路由
-    Route::prefix('picbooks')->middleware(['auth:sanctum', 'check.user.type:admin'])->group(function () {
-        Route::get('trashed', [AdminPicbookController::class, 'trashed']);
-        Route::post('{id}/restore', [AdminPicbookController::class, 'restore']);
-        Route::delete('{id}/force', [AdminPicbookController::class, 'forceDelete']);
-        Route::apiResource('/', AdminPicbookController::class);
-    });
+    // Route::prefix('picbooks')->middleware(['auth:sanctum', 'check.user.type:admin'])->group(function () {
+    //     Route::get('trashed', [AdminPicbookController::class, 'trashed']);
+    //     Route::post('{id}/restore', [AdminPicbookController::class, 'restore']);
+    //     Route::delete('{id}/force', [AdminPicbookController::class, 'forceDelete']);
+    //     Route::apiResource('/', AdminPicbookController::class);
+    // });
 
     // // 后台绘本页面管理路由
     // Route::prefix('picbook-pages')->group(function () {

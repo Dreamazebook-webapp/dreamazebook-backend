@@ -12,6 +12,9 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ApiExceptionHandler
 {
@@ -124,5 +127,40 @@ class ApiExceptionHandler
         }
 
         return $this->error($message, $errors, $statusCode);
+    }
+
+    public function handle(Throwable $e)
+    {
+        // 记录错误日志
+        Log::error($e->getMessage(), [
+            'exception' => get_class($e),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        // 根据环境返回不同的错误信息
+        if (config('app.debug')) {
+            // 开发环境：返回详细错误信息
+            return $this->error(
+                $e->getMessage(),
+                [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => explode("\n", $e->getTraceAsString())
+                ],
+                500
+            );
+        }
+
+        // 生产环境：返回友好的错误信息
+        $message = match(true) {
+            $e instanceof QueryException => __('messages.database_error'),
+            $e instanceof \PDOException => __('messages.database_error'),
+            $e instanceof \ErrorException => __('messages.server_error'),
+            default => __('messages.unknown_error')
+        };
+
+        return $this->error($message, null, 500);
     }
 } 

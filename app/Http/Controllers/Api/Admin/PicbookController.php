@@ -9,9 +9,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Traits\ApiResponse;
+use Illuminate\Support\Facades\Log;
 
 class PicbookController extends Controller
 {
+    use ApiResponse;
+
     // 后台列表，显示所有绘本
     public function index(Request $request)
     {
@@ -30,22 +34,27 @@ class PicbookController extends Controller
 
         // 分页
         $perPage = $request->input('per_page', 15);
-        return $query->paginate($perPage);
+        return $this->success(
+            $query->paginate($perPage),
+            __('picbook.list_success')
+        );
     }
 
     // 后台详情，显示完整信息
     public function show(Picbook $picbook)
     {
-        return $picbook->load(['translations', 'variants', 'pages' => function($query) {
-            $query->orderBy('page_number');
-        }]);
+        return $this->success(
+            $picbook->load(['translations', 'variants', 'pages' => function($query) {
+                $query->orderBy('page_number');
+            }]),
+            __('picbook.detail_success')
+        );
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'default_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'default_cover' => 'required|string',
             'pricesymbol' => 'required|string|max:10',
             'price' => 'required|numeric|min:0',
@@ -73,6 +82,16 @@ class PicbookController extends Controller
                 Picbook::STATUS_PUBLISHED,
                 Picbook::STATUS_ARCHIVED
             ])],
+            // 添加翻译验证规则
+            'translations' => 'required|array|min:1',
+            'translations.*' => 'required|array',
+            'translations.*.language' => 'required|string|size:2',
+            'translations.*.bookname' => 'required|string|max:255',
+            'translations.*.intro' => 'nullable|string',
+            'translations.*.description' => 'nullable|string',
+            'translations.*.cover' => 'required|string',
+            'translations.*.tags' => 'nullable|array',
+            'translations.*.tags.*' => 'string',
             // 默认变体信息
             'default_variant' => 'required|array',
             'default_variant.language' => 'required|string|size:2',
@@ -81,13 +100,28 @@ class PicbookController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->error(
+                __('messages.validation_error'),
+                $validator->errors(),
+                422
+            );
         }
 
         try {
             DB::beginTransaction();
             
-            $picbook = Picbook::create($validator->validated());
+            // 创建绘本，只使用基本字段
+            $picbook = Picbook::create(
+                $validator->safe()->except(['translations', 'default_variant'])
+            );
+
+            // 创建翻译
+            foreach ($request->translations as $translation) {
+                $picbook->translations()->create(array_merge(
+                    $translation,
+                    ['tags' => $translation['tags'] ?? []]  // 如果没有提供 tags，设置为空数组
+                ));
+            }
 
             // 创建默认变体
             $defaultVariant = $request->default_variant;
@@ -101,10 +135,21 @@ class PicbookController extends Controller
             ]);
 
             DB::commit();
-            return response()->json($picbook->load('variants'), 201);
+            return $this->success(
+                $picbook->load(['translations', 'variants']), 
+                __('picbook.create_success'),
+                201
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => '创建失败', 'error' => $e->getMessage()], 500);
+            // 记录详细错误日志
+            Log::error('Failed to create picbook', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+            // 返回友好的错误信息
+            return $this->error(__('picbook.create_failed'));
         }
     }
 
@@ -112,10 +157,11 @@ class PicbookController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'default_name' => 'string|max:255',
+            'default_cover' => 'string',
             'pricesymbol' => 'string|max:10',
             'price' => 'numeric|min:0',
             'currencycode' => 'string|size:3',
-            'default_cover' => 'string',
+            'total_pages' => 'integer|min:1',
             'rating' => [
                 'numeric',
                 'min:0',
@@ -124,12 +170,12 @@ class PicbookController extends Controller
             ],
             'has_choices' => 'boolean',
             'has_qa' => 'boolean',
-            'supported_languages' => 'array',
+            'supported_languages' => 'array|min:1',
             'supported_languages.*' => 'string|size:2',
-            'supported_genders' => 'array',
-            'supported_genders.*' => 'integer',
-            'supported_skincolors' => 'array',
-            'supported_skincolors.*' => 'integer',
+            'supported_genders' => 'array|min:1',
+            'supported_genders.*' => 'integer|in:1,2',
+            'supported_skincolors' => 'array|min:1',
+            'supported_skincolors.*' => 'integer|min:1',
             'tags' => 'nullable|array',
             'tags.*' => 'string',
             'status' => Rule::in([
@@ -144,17 +190,46 @@ class PicbookController extends Controller
             'variants.*.skincolor' => 'required|integer',
             'variants.*.bookname' => 'required|string|max:255',
             'variants.*.cover' => 'required|string',
+            // 添加翻译验证规则
+            'translations' => 'array',
+            'translations.*' => 'array',
+            'translations.*.language' => [
+                'required',
+                'string',
+                'size:2',
+                Rule::in($picbook->supported_languages ?? [])
+            ],
+            'translations.*.bookname' => 'required|string|max:255',
+            'translations.*.intro' => 'nullable|string',
+            'translations.*.description' => 'nullable|string',
+            'translations.*.cover' => 'required|string',
+            'translations.*.tags' => 'nullable|array',
+            'translations.*.tags.*' => 'string',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->error(
+                __('messages.validation_error'),
+                $validator->errors(),
+                422
+            );
         }
 
         try {
             DB::beginTransaction();
 
             // 更新绘本基本信息
-            $picbook->update($validator->validated());
+            $picbook->update($validator->safe()->except('translations'));
+
+            // 更新翻译
+            if ($request->has('translations')) {
+                foreach ($request->translations as $translationData) {
+                    $picbook->translations()->updateOrCreate(
+                        ['language' => $translationData['language']],
+                        $translationData
+                    );
+                }
+            }
 
             // 处理语言变更
             if ($request->has('supported_languages')) {
@@ -216,13 +291,13 @@ class PicbookController extends Controller
             }
 
             DB::commit();
-            return response()->json($picbook->load(['variants', 'translations']), 200);
+            return $this->success(
+                $picbook->load(['translations', 'variants']),
+                __('picbook.update_success')
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'message' => '更新失败',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->error(__('picbook.update_failed'), ['error' => $e->getMessage()], 500);
         }
     }
 
@@ -235,11 +310,12 @@ class PicbookController extends Controller
             $picbook->variants()->delete();
             $picbook->pages()->delete();
             $picbook->delete();
+            
             DB::commit();
-            return response()->json(null, 204);
+            return $this->success(null, __('picbook.delete_success'), 204);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => '删除失败'], 500);
+            return $this->error(__('picbook.delete_failed'), ['error' => $e->getMessage()], 500);
         }
     }
 
@@ -259,10 +335,13 @@ class PicbookController extends Controller
             $picbook->pages()->withTrashed()->restore();
             
             DB::commit();
-            return response()->json($picbook->load(['translations', 'variants', 'pages']), 200);
+            return $this->success(
+                $picbook->load(['translations', 'variants', 'pages']),
+                __('picbook.restore_success')
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => '恢复失败'], 500);
+            return $this->error(__('picbook.restore_failed'), ['error' => $e->getMessage()], 500);
         }
     }
 
@@ -282,10 +361,10 @@ class PicbookController extends Controller
             $picbook->forceDelete();
             
             DB::commit();
-            return response()->json(null, 204);
+            return $this->success(null, __('picbook.force_delete_success'), 204);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => '永久删除失败'], 500);
+            return $this->error(__('picbook.force_delete_failed'), ['error' => $e->getMessage()], 500);
         }
     }
 
@@ -297,6 +376,6 @@ class PicbookController extends Controller
         $picbooks = Picbook::onlyTrashed()
             ->with(['translations', 'variants'])
             ->paginate();
-        return response()->json($picbooks);
+        return $this->success($picbooks, __('picbook.trashed_success'));
     }
 } 

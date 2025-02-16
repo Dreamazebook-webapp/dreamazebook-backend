@@ -13,21 +13,17 @@ return new class extends Migration
     {
         Schema::create('picbook_translations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('picbook_id');
-            $table->string('language');
+            $table->foreignId('picbook_id')->constrained()->onDelete('cascade');
+            $table->string('language', 2);
             $table->string('bookname');
-            $table->string('intro')->nullable();
-            $table->string('description')->nullable();
-            $table->string('pricesymbol');
-            $table->float('price');
-            $table->string('currencycode');
+            $table->text('intro')->nullable();
+            $table->text('description')->nullable();
             $table->string('cover');
-            $table->string('tags');
-            $table->string('content', 1000);
-            $table->foreign('picbook_id')->references('id')->on('picbooks')->onDelete('cascade');
-            $table->unique(['picbook_id', 'language']);
+            $table->json('tags')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->unique(['picbook_id', 'language']);
         });
     }
 

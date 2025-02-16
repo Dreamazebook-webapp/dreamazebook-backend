@@ -18,16 +18,17 @@ class PicbookTranslation extends Model
         'bookname',
         'intro',
         'description',
-        'pricesymbol',
-        'price',
-        'currencycode',
         'cover',
         'tags'
     ];
 
     protected $casts = [
-        'price' => 'float',
         'tags' => 'array'
+    ];
+
+    // 设置默认值
+    protected $attributes = [
+        'tags' => '[]'  // 默认为空数组
     ];
 
     public function picbook(): BelongsTo

@@ -20,18 +20,18 @@ class Picbook extends Model
 
     protected $fillable = [
         'default_name',
+        'default_cover',
         'pricesymbol',
         'price',
         'currencycode',
         'total_pages',
-        'default_cover',
         'rating',
+        'has_choices',
+        'has_qa',
         'supported_languages',
         'supported_genders',
         'supported_skincolors',
         'tags',
-        'has_choices',
-        'has_qa',
         'status'
     ];
 
@@ -142,5 +142,17 @@ class Picbook extends Model
     public function hasQA(): bool
     {
         return $this->has_qa;
+    }
+
+    // 创建或更新翻译
+    public function setTranslation(string $language, string $name, ?string $description = null)
+    {
+        return $this->translations()->updateOrCreate(
+            ['language' => $language],
+            [
+                'name' => $name,
+                'description' => $description
+            ]
+        );
     }
 }
