@@ -2,68 +2,72 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Picbook;
+use App\Models\PicbookPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Traits\ApiResponse;
-use Illuminate\Support\Facades\App;
 
-class PicbookController extends Controller
+class PicbookController extends ApiController
 {
-    use ApiResponse;
-
-    // 前台列表，只显示已发布的绘本
+    /**
+     * 获取绘本列表
+     */
     public function index(Request $request)
     {
-        $query = Picbook::query()
-            ->where('status', Picbook::STATUS_PUBLISHED);
-
-        // 应用过滤条件
+        $query = Picbook::where('status', 1); // 只显示已发布的绘本
+        
+        // 搜索条件
+        if ($request->has('keyword')) {
+            $query->where('default_name', 'like', '%' . $request->keyword . '%');
+        }
+        
+        // 标签筛选
         if ($request->has('tag')) {
-            $query->withTag($request->tag);
+            $query->whereJsonContains('tags', $request->tag);
         }
 
-        // 加载当前语言的翻译
-        $query->with(['translations' => function($query) {
-            $query->where('language', App::getLocale());
-        }]);
+        // 语言筛选
+        if ($request->has('language')) {
+            $query->whereJsonContains('supported_languages', $request->language);
+        }
 
-        // 分页
-        $perPage = $request->input('per_page', 15);
-        return $this->success(
-            $query->paginate($perPage),
-            __('picbook.list_success')
-        );
+        // 价格范围筛选
+        if ($request->has('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        if ($request->has('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        // 货币筛选
+        if ($request->has('currencycode')) {
+            $query->where('currencycode', $request->currencycode);
+        }
+
+        // 排序
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+        
+        // 只允许特定字段排序
+        $allowedSortFields = ['created_at', 'price', 'rating'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        $picbooks = $query->paginate($request->input('per_page', 15));
+
+        return $this->success($picbooks, __('messages.picbook.list_success'));
     }
 
-    // 前台详情，只显示基本信息
-    public function show(Request $request, Picbook $picbook)
+    /**
+     * 获取绘本详情
+     */
+    public function show(Request $request, $id)
     {
-        if ($picbook->status !== Picbook::STATUS_PUBLISHED) {
-            return $this->error(__('picbook.not_found'), null, 404);
-        }
-
-        // 加载当前语言的翻译
-        return $this->success(
-            $picbook->load(['translations' => function($query) {
-                $query->where('language', App::getLocale());
-            }]),
-            __('picbook.detail_success')
-        );
-    }
-
-    // 获取指定语言和特征的变体
-    public function getVariant(Request $request, Picbook $picbook)
-    {
-        if ($picbook->status !== Picbook::STATUS_PUBLISHED) {
-            return $this->error(__('picbook.not_found'), null, 404);
-        }
-
         $validator = Validator::make($request->all(), [
             'language' => 'required|string|size:2',
-            'gender' => 'required|integer',
-            'skincolor' => 'required|integer',
+            'gender' => 'required|integer|in:1,2',
+            'skincolor' => 'required|integer|in:1,2,3'
         ]);
 
         if ($validator->fails()) {
@@ -74,58 +78,53 @@ class PicbookController extends Controller
             );
         }
 
-        // 检查是否支持请求的特征
-        if (!$picbook->supportsLanguage($request->language)) {
-            return $this->error(__('picbook.language_not_supported'), null, 422);
+        $picbook = Picbook::where('status', 1)->findOrFail($id);
+
+        // 验证请求的参数是否在支持范围内
+        if (!in_array($request->language, $picbook->supported_languages)) {
+            return $this->error('不支持的语言');
         }
-        if (!$picbook->supportsGender($request->gender)) {
-            return $this->error(__('picbook.gender_not_supported'), null, 422);
+        if (!in_array($request->gender, $picbook->supported_genders)) {
+            return $this->error('不支持的性别');
         }
-        if (!$picbook->supportsSkinColor($request->skincolor)) {
-            return $this->error(__('picbook.skincolor_not_supported'), null, 422);
+        if (!in_array($request->skincolor, $picbook->supported_skincolors)) {
+            return $this->error('不支持的肤色');
         }
 
-        $variant = $picbook->getVariant($request->language, $request->gender, $request->skincolor);
-        if (!$variant) {
-            return $this->error(__('picbook.variant_not_found'), null, 404);
-        }
-
-        return $this->success($variant, __('picbook.variant_success'));
-    }
-
-    // 获取绘本的页面及其翻译
-    public function getPages(Request $request, Picbook $picbook)
-    {
-        if ($picbook->status !== Picbook::STATUS_PUBLISHED) {
-            return $this->error(__('picbook.not_found'), null, 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'language' => 'required|string|size:2',
-            'gender' => 'required|integer',
-            'skincolor' => 'required|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->error(
-                __('validation.failed'),
-                $validator->errors(),
-                422
-            );
-        }
-
-        if (!$picbook->supportsLanguage($request->language)) {
-            return $this->error(__('picbook.language_not_supported'), null, 422);
-        }
-        $pages = $picbook->pages()
-            ->where('gender', $request->gender)
-            ->where('skincolor', $request->skincolor)
-            ->orderBy('page_number')
-            ->with(['translations' => function($query) use ($request) {
-                $query->where('language', $request->language);
+        // 获取绘本页面及其变体
+        $pages = PicbookPage::where('picbook_id', $id)
+            ->where('status', 1)
+            ->with(['variants' => function ($query) use ($request) {
+                $query->where([
+                    'language' => $request->language,
+                    'gender' => $request->gender,
+                    'skincolor' => $request->skincolor
+                ]);
             }])
+            ->orderBy('page_number')
             ->get();
 
-        return $this->success($pages, __('picbook.pages_success'));
+        $picbook->pages = $pages;
+
+        return $this->success($picbook, __('messages.picbook.detail_success'));
+    }
+
+    /**
+     * 获取绘本支持的配置选项
+     */
+    public function options($id)
+    {
+        $picbook = Picbook::where('status', 1)->findOrFail($id);
+        
+        return $this->success([
+            'supported_languages' => $picbook->supported_languages,
+            'supported_genders' => $picbook->supported_genders,
+            'supported_skincolors' => $picbook->supported_skincolors,
+            'price' => [
+                'amount' => $picbook->price,
+                'symbol' => $picbook->pricesymbol,
+                'currency' => $picbook->currencycode
+            ]
+        ], __('messages.picbook.options_success'));
     }
 } 

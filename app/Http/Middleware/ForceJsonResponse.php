@@ -23,8 +23,8 @@ class ForceJsonResponse
 
         $response = $next($request);
 
-        // 如果响应不是JSON格式，转换为JSON
-        if (!$this->isJsonResponse($response)) {
+        // 如果响应不是JSON格式，转换为JSON，仅限api路由
+        if (!$this->isJsonResponse($response) && $request->is('api/*')) {
             $statusCode = $response->getStatusCode();
             $content = $response->getContent();
 

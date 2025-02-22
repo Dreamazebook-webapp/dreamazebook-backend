@@ -1,0 +1,981 @@
+{
+  "info": {
+    "name": "绘本系统 API",
+    "description": "绘本系统的前后台API文档",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "前台接口",
+      "item": [
+        {
+          "name": "认证",
+          "item": [
+            {
+              "name": "用户注册",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/register",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "register"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"测试用户\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+                },
+                "description": "用户注册"
+              }
+            },
+            {
+              "name": "用户登录",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "description": "用户登录"
+              }
+            },
+            {
+              "name": "用户登出",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "logout"]
+                },
+                "description": "用户登出"
+              }
+            },
+            {
+              "name": "获取当前用户信息",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "me"]
+                },
+                "description": "获取当前登录用户信息"
+              }
+            }
+          ]
+        },
+        {
+          "name": "用户",
+          "item": [
+            {
+              "name": "修改个人信息",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/user/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["user", "profile"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"新名字\",\n  \"avatar\": \"http://example.com/avatar.jpg\"\n}"
+                },
+                "description": "修改用户个人信息"
+              }
+            },
+            {
+              "name": "修改密码",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/user/password",
+                  "host": ["{{base_url}}"],
+                  "path": ["user", "password"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"current_password\": \"old_password\",\n  \"password\": \"new_password\",\n  \"password_confirmation\": \"new_password\"\n}"
+                },
+                "description": "修改用户密码"
+              }
+            }
+          ]
+        },
+        {
+          "name": "绘本",
+          "item": [
+            {
+              "name": "获取绘本列表",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/picbooks?keyword=&tag=&language=&min_price=&max_price=&currencycode=&page=1&per_page=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "picbooks"],
+                  "query": [
+                    {
+                      "key": "keyword",
+                      "value": "",
+                      "description": "搜索关键词"
+                    },
+                    {
+                      "key": "tag",
+                      "value": "",
+                      "description": "标签筛选"
+                    },
+                    {
+                      "key": "language",
+                      "value": "",
+                      "description": "语言筛选"
+                    },
+                    {
+                      "key": "min_price",
+                      "value": "",
+                      "description": "最低价格"
+                    },
+                    {
+                      "key": "max_price",
+                      "value": "",
+                      "description": "最高价格"
+                    },
+                    {
+                      "key": "currencycode",
+                      "value": "",
+                      "description": "货币代码"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "页码"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "15",
+                      "description": "每页数量"
+                    }
+                  ]
+                },
+                "description": "获取绘本列表，支持多种筛选条件"
+              }
+            },
+            {
+              "name": "获取绘本详情",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/picbooks/1?language=en&gender=1&skincolor=1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "picbooks", "1"],
+                  "query": [
+                    {
+                      "key": "language",
+                      "value": "en",
+                      "description": "语言代码"
+                    },
+                    {
+                      "key": "gender",
+                      "value": "1",
+                      "description": "性别(1-男,2-女)"
+                    },
+                    {
+                      "key": "skincolor",
+                      "value": "1",
+                      "description": "肤色(1-白,2-黄,3-黑)"
+                    }
+                  ]
+                },
+                "description": "获取绘本详情，包含页面和变体信息"
+              }
+            },
+            {
+              "name": "获取绘本配置选项",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/picbooks/1/options",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "picbooks", "1", "options"]
+                },
+                "description": "获取绘本支持的语言、性别、肤色等配置选项"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "后台接口",
+      "item": [
+        {
+          "name": "认证",
+          "item": [
+            {
+              "name": "管理员登录",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "login"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+                },
+                "description": "管理员登录"
+              }
+            },
+            {
+              "name": "管理员登出",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "logout"]
+                },
+                "description": "管理员登出"
+              }
+            },
+            {
+              "name": "获取管理员信息",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "me"]
+                },
+                "description": "获取当前管理员信息"
+              }
+            }
+          ]
+        },
+        {
+          "name": "用户管理",
+          "item": [
+            {
+              "name": "获取用户列表",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/users?keyword=&status=&page=1&per_page=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "users"],
+                  "query": [
+                    {
+                      "key": "keyword",
+                      "value": "",
+                      "description": "搜索关键词"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "状态筛选"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "页码"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "15",
+                      "description": "每页数量"
+                    }
+                  ]
+                },
+                "description": "获取用户列表"
+              }
+            },
+            {
+              "name": "禁用用户",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/users/1/disable",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "users", "1", "disable"]
+                },
+                "description": "禁用指定用户"
+              }
+            },
+            {
+              "name": "启用用户",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/users/1/enable",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "users", "1", "enable"]
+                },
+                "description": "启用指定用户"
+              }
+            }
+          ]
+        },
+        {
+          "name": "绘本管理",
+          "item": [
+            {
+              "name": "获取绘本列表",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbooks?keyword=&status=&min_price=&max_price=&currencycode=&page=1&per_page=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbooks"],
+                  "query": [
+                    {
+                      "key": "keyword",
+                      "value": "",
+                      "description": "搜索关键词"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "状态筛选"
+                    },
+                    {
+                      "key": "min_price",
+                      "value": "",
+                      "description": "最低价格"
+                    },
+                    {
+                      "key": "max_price",
+                      "value": "",
+                      "description": "最高价格"
+                    },
+                    {
+                      "key": "currencycode",
+                      "value": "",
+                      "description": "货币代码"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "页码"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "15",
+                      "description": "每页数量"
+                    }
+                  ]
+                },
+                "description": "获取绘本列表，支持多种筛选条件"
+              }
+            },
+            {
+              "name": "创建绘本",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbooks",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbooks"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"default_name\": \"Sample Book\",\n  \"default_cover\": \"http://example.com/cover.jpg\",\n  \"pricesymbol\": \"$\",\n  \"price\": 9.99,\n  \"currencycode\": \"USD\",\n  \"total_pages\": 10,\n  \"supported_languages\": [\"en\", \"zh\"],\n  \"supported_genders\": [1, 2],\n  \"supported_skincolors\": [1, 2, 3],\n  \"none_skin\": null,\n  \"tags\": [\"fantasy\", \"adventure\"],\n  \"has_choices\": false,\n  \"has_qa\": false,\n  \"status\": 0\n}"
+                },
+                "description": "创建新的绘本"
+              }
+            },
+            {
+              "name": "更新绘本",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbooks/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbooks", "1"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"default_name\": \"Sample Book\",\n  \"default_cover\": \"http://example.com/cover.jpg\",\n  \"pricesymbol\": \"$\",\n  \"price\": 9.99,\n  \"currencycode\": \"USD\",\n  \"total_pages\": 10,\n  \"supported_languages\": [\"en\", \"zh\"],\n  \"supported_genders\": [1, 2],\n  \"supported_skincolors\": [1, 2, 3],\n  \"none_skin\": null,\n  \"tags\": [\"fantasy\", \"adventure\"],\n  \"has_choices\": false,\n  \"has_qa\": false,\n  \"status\": 0\n}"
+                },
+                "description": "更新绘本信息"
+              }
+            },
+            {
+              "name": "删除绘本",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbooks/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbooks", "1"]
+                },
+                "description": "删除指定绘本"
+              }
+            }
+          ]
+        },
+        {
+          "name": "绘本变体管理",
+          "item": [
+            {
+              "name": "获取变体列表",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook_variants?picbook_id=1&language=&gender=&skincolor=&status=&page=1&per_page=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook_variants"],
+                  "query": [
+                    {
+                      "key": "picbook_id",
+                      "value": "1",
+                      "description": "绘本ID"
+                    },
+                    {
+                      "key": "language",
+                      "value": "",
+                      "description": "语言筛选"
+                    },
+                    {
+                      "key": "gender",
+                      "value": "",
+                      "description": "性别筛选"
+                    },
+                    {
+                      "key": "skincolor",
+                      "value": "",
+                      "description": "肤色筛选"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "状态筛选"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "页码"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "15",
+                      "description": "每页数量"
+                    }
+                  ]
+                },
+                "description": "获取绘本变体列表，支持多种筛选条件"
+              }
+            },
+            {
+              "name": "创建变体",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook_variants",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook_variants"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"picbook_id\": 1,\n  \"language\": \"en\",\n  \"gender\": 1,\n  \"skincolor\": 1,\n  \"bookname\": \"Sample Book - English Male White\",\n  \"intro\": \"Book introduction\",\n  \"description\": \"Detailed description\",\n  \"cover\": \"http://example.com/cover-en-male-white.jpg\",\n  \"price\": 9.99,\n  \"pricesymbol\": \"$\",\n  \"currencycode\": \"USD\",\n  \"tags\": [\"fantasy\", \"adventure\"],\n  \"status\": 0\n}"
+                },
+                "description": "创建新的绘本变体"
+              }
+            },
+            {
+              "name": "批量创建变体",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook_variants/batch",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook_variants", "batch"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"picbook_id\": 1,\n  \"variants\": [\n    {\n      \"language\": \"en\",\n      \"gender\": 1,\n      \"skincolor\": 1,\n      \"bookname\": \"Sample Book - English Male White\",\n      \"intro\": \"Book introduction\",\n      \"description\": \"Detailed description\",\n      \"cover\": \"http://example.com/cover-en-male-white.jpg\",\n      \"price\": 9.99,\n      \"pricesymbol\": \"$\",\n      \"currencycode\": \"USD\",\n      \"tags\": [\"fantasy\", \"adventure\"],\n      \"status\": 0\n    },\n    {\n      \"language\": \"zh\",\n      \"gender\": 2,\n      \"skincolor\": 2,\n      \"bookname\": \"示例书籍 - 中文女性黄色\",\n      \"intro\": \"书籍简介\",\n      \"description\": \"详细描述\",\n      \"cover\": \"http://example.com/cover-zh-female-yellow.jpg\",\n      \"price\": 69.99,\n      \"pricesymbol\": \"¥\",\n      \"currencycode\": \"CNY\",\n      \"tags\": [\"奇幻\", \"冒险\"],\n      \"status\": 0\n    }\n  ]\n}"
+                },
+                "description": "批量创建绘本变体"
+              }
+            },
+            {
+              "name": "更新变体",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook_variants/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook_variants", "1"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"bookname\": \"Updated Book Name\",\n  \"intro\": \"Updated introduction\",\n  \"description\": \"Updated description\",\n  \"cover\": \"http://example.com/new-cover.jpg\",\n  \"price\": 19.99,\n  \"status\": 1\n}"
+                },
+                "description": "更新绘本变体信息"
+              }
+            },
+            {
+              "name": "删除变体",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook_variants/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook_variants", "1"]
+                },
+                "description": "删除指定绘本变体"
+              }
+            }
+          ]
+        },
+        {
+          "name": "绘本页面管理",
+          "item": [
+            {
+              "name": "获取绘本页面列表",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-pages?picbook_id=1&status=&page=1&per_page=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-pages"],
+                  "query": [
+                    {
+                      "key": "picbook_id",
+                      "value": "1",
+                      "description": "绘本ID"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "状态筛选"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "页码"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "15",
+                      "description": "每页数量"
+                    }
+                  ]
+                },
+                "description": "获取绘本页面列表"
+              }
+            },
+            {
+              "name": "创建绘本页面",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-pages",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-pages"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"picbook_id\": 1,\n  \"page_number\": 1,\n  \"image_url\": \"http://example.com/page1.jpg\",\n  \"elements\": \"{}\",\n  \"is_choices\": false,\n  \"question\": null,\n  \"status\": 0,\n  \"is_ai_face\": false,\n  \"mask_image_url\": null,\n  \"variants\": [\n    {\n      \"language\": \"en\",\n      \"gender\": 1,\n      \"skincolor\": 1,\n      \"content\": \"Page content in English\"\n    },\n    {\n      \"language\": \"zh\",\n      \"gender\": 1,\n      \"skincolor\": 1,\n      \"content\": \"页面中文内容\"\n    }\n  ]\n}"
+                },
+                "description": "创建新的绘本页面，支持同时创建页面变体"
+              }
+            },
+            {
+              "name": "更新绘本页面",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-pages/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-pages", "1"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"page_number\": 1,\n  \"image_url\": \"http://example.com/page1-updated.jpg\",\n  \"elements\": \"{}\",\n  \"is_choices\": false,\n  \"question\": null,\n  \"status\": 1,\n  \"is_ai_face\": false,\n  \"mask_image_url\": null,\n  \"variants\": [\n    {\n      \"language\": \"en\",\n      \"gender\": 1,\n      \"skincolor\": 1,\n      \"content\": \"Updated page content in English\"\n    },\n    {\n      \"language\": \"zh\",\n      \"gender\": 1,\n      \"skincolor\": 1,\n      \"content\": \"更新后的页面中文内容\"\n    }\n  ]\n}"
+                },
+                "description": "更新绘本页面信息，支持同时更新页面变体"
+              }
+            },
+            {
+              "name": "删除绘本页面",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-pages/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-pages", "1"]
+                },
+                "description": "删除指定绘本页面及其变体"
+              }
+            }
+          ]
+        },
+        {
+          "name": "绘本页面变体管理",
+          "item": [
+            {
+              "name": "获取页面变体列表",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-page-variants?page_id=1&language=&gender=&skincolor=&page=1&per_page=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-page-variants"],
+                  "query": [
+                    {
+                      "key": "page_id",
+                      "value": "1",
+                      "description": "绘本页面ID"
+                    },
+                    {
+                      "key": "language",
+                      "value": "",
+                      "description": "语言筛选"
+                    },
+                    {
+                      "key": "gender",
+                      "value": "",
+                      "description": "性别筛选"
+                    },
+                    {
+                      "key": "skincolor",
+                      "value": "",
+                      "description": "肤色筛选"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "页码"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "15",
+                      "description": "每页数量"
+                    }
+                  ]
+                },
+                "description": "获取绘本页面变体列表"
+              }
+            },
+            {
+              "name": "创建页面变体",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-page-variants",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-page-variants"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"page_id\": 1,\n  \"language\": \"en\",\n  \"gender\": 1,\n  \"skincolor\": 1,\n  \"content\": \"Page content in English\"\n}"
+                },
+                "description": "创建新的绘本页面变体"
+              }
+            },
+            {
+              "name": "更新页面变体",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-page-variants/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-page-variants", "1"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"content\": \"Updated page content in English\"\n}"
+                },
+                "description": "更新绘本页面变体信息"
+              }
+            },
+            {
+              "name": "删除页面变体",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/picbook-page-variants/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "admin", "picbook-page-variants", "1"]
+                },
+                "description": "删除指定绘本页面变体"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+} 

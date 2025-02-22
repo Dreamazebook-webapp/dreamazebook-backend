@@ -40,4 +40,13 @@ class AdminAuthController extends Controller
 
         return $this->success(null, __('auth.logout_success'));
     }
+
+    /**
+     * 获取当前管理员信息
+     */
+    public function me(): JsonResponse
+    {
+        $admin = auth()->user();
+        return $this->success($admin, __('auth.admin_info_success'));
+    }
 }

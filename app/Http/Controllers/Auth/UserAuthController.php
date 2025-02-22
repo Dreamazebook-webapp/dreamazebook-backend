@@ -10,6 +10,8 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class UserAuthController extends Controller
 {
@@ -56,5 +58,69 @@ class UserAuthController extends Controller
         auth()->user()->currentAccessToken()->delete();
 
         return $this->success(null, __('auth.logout_success'));
+    }
+
+    /**
+     * 获取当前用户信息
+     */
+    public function me(): JsonResponse
+    {
+        $user = auth()->user();
+        return $this->success($user, __('auth.user_info_success'));
+    }
+
+    /**
+     * 修改个人信息
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'string|max:255',
+            'avatar' => 'string|url'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error(
+                __('validation.failed'),
+                $validator->errors(),
+                422
+            );
+        }
+
+        $user = auth()->user();
+        $user->update($request->only(['name', 'avatar']));
+
+        return $this->success($user, __('auth.profile_update_success'));
+    }
+
+    /**
+     * 修改密码
+     */
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error(
+                __('validation.failed'),
+                $validator->errors(),
+                422
+            );
+        }
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return $this->error(__('auth.password_incorrect'));
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return $this->success(null, __('auth.password_update_success'));
     }
 }

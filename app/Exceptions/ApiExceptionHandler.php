@@ -33,7 +33,7 @@ class ApiExceptionHandler
 
         // 认证异常
         if ($e instanceof AuthenticationException) {
-            $isAdmin = str_starts_with($request->path(), 'api/admin');
+            $isAdmin = str_starts_with($request->path(), 'api/v1/admin');
             return $this->error(
                 $isAdmin ? __('auth.admin_login_required') : __('auth.login_required'),
                 ['login_url' => $isAdmin ? '/admin/login' : '/login'],
