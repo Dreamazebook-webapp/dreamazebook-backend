@@ -9,6 +9,7 @@ return [
     'delete_success' => '删除绘本成功',
     'restore_success' => '恢复绘本成功',
     'force_delete_success' => '永久删除绘本成功',
+    'options_success' => '获取绘本配置选项成功',
     
     // 错误消息
     'not_found' => '绘本不存在',
@@ -23,6 +24,8 @@ return [
     'gender_not_supported' => '不支持的性别',
     'skincolor_not_supported' => '不支持的肤色',
     'variant_not_found' => '未找到对应的变体',
+    'variant_exists' => '该变体组合已存在',
+    'page_variant_exists' => '该页面变体组合已存在',
     
     // 变体和页面
     'variant_success' => '获取绘本变体成功',
@@ -68,4 +71,21 @@ return [
         'restore_success' => '恢复页面成功',
         'restore_failed' => '恢复页面失败',
     ],
+
+    // 页面变体相关消息
+    'page_variant' => [
+        'no_sequence_with_masks' => '该页面没有角色序列，不需要蒙版',
+        'masks_required' => '该页面需要提供角色蒙版',
+        'masks_count_mismatch' => '蒙版数量(:masks)与角色数量(:sequence)不匹配',
+        'invalid_mask_url' => '蒙版URL无效'
+    ],
+
+    // 选择类型相关
+    'choices_type' => [
+        'min_pages_error' => '选择类型为:type时，总页数不能少于:pages页',
+        'type_names' => [
+            '1' => '8选4',
+            '2' => '16选8'
+        ]
+    ]
 ]; 

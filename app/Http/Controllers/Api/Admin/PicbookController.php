@@ -84,6 +84,7 @@ class PicbookController extends ApiController
             'has_choices' => 'boolean',
             'has_qa' => 'boolean',
             'status' => 'required|integer|in:0,1,2',
+            'choices_type' => 'required|integer|in:0,1,2'
         ]);
 
         if ($validator->fails()) {
@@ -92,6 +93,22 @@ class PicbookController extends ApiController
                 $validator->errors(),
                 422
             );
+        }
+
+        // 验证选择类型与总页数的关系
+        if ($request->choices_type > 0) {
+            $required_pages = $request->choices_type == 1 ? 8 : 16;
+            $type_name = __('picbook.choices_type.type_names.' . $request->choices_type);
+            if ($request->total_pages < $required_pages) {
+                return $this->error(
+                    __('validation.failed'),
+                    ['total_pages' => [__('picbook.choices_type.min_pages_error', [
+                        'type' => $type_name,
+                        'pages' => $required_pages
+                    ])]],
+                    422
+                );
+            }
         }
 
         $picbook = Picbook::create($request->all());
@@ -132,6 +149,7 @@ class PicbookController extends ApiController
             'has_choices' => 'boolean',
             'has_qa' => 'boolean',
             'status' => 'integer|in:0,1,2',
+            'choices_type' => 'integer|in:0,1,2'
         ]);
 
         if ($validator->fails()) {
@@ -140,6 +158,23 @@ class PicbookController extends ApiController
                 $validator->errors(),
                 422
             );
+        }
+
+        // 验证选择类型与总页数的关系
+        if ($request->has('choices_type') && $request->choices_type > 0) {
+            $total_pages = $request->input('total_pages', $picbook->total_pages);
+            $required_pages = $request->choices_type == 1 ? 8 : 16;
+            $type_name = __('picbook.choices_type.type_names.' . $request->choices_type);
+            if ($total_pages < $required_pages) {
+                return $this->error(
+                    __('validation.failed'),
+                    ['total_pages' => [__('picbook.choices_type.min_pages_error', [
+                        'type' => $type_name,
+                        'pages' => $required_pages
+                    ])]],
+                    422
+                );
+            }
         }
 
         $picbook->update($request->all());

@@ -9,6 +9,7 @@ return [
     'delete_success' => 'Successfully deleted picbook',
     'restore_success' => 'Successfully restored picbook',
     'force_delete_success' => 'Successfully permanently deleted picbook',
+    'options_success' => 'Successfully retrieved picbook options',
     
     // Error messages
     'not_found' => 'Picbook not found',
@@ -23,6 +24,8 @@ return [
     'gender_not_supported' => 'Gender not supported',
     'skincolor_not_supported' => 'Skin color not supported',
     'variant_not_found' => 'Variant not found',
+    'variant_exists' => 'This variant combination already exists',
+    'page_variant_exists' => 'This page variant combination already exists',
     
     // Variant and pages
     'variant_success' => 'Successfully retrieved picbook variant',
@@ -68,4 +71,21 @@ return [
         'restore_success' => 'Successfully restored page',
         'restore_failed' => 'Failed to restore page',
     ],
+
+    // Page variant related messages
+    'page_variant' => [
+        'no_sequence_with_masks' => 'This page has no character sequence, masks are not needed',
+        'masks_required' => 'Character masks are required for this page',
+        'masks_count_mismatch' => 'Number of masks (:masks) does not match number of characters (:sequence)',
+        'invalid_mask_url' => 'Invalid mask URL'
+    ],
+
+    // Choice type related
+    'choices_type' => [
+        'min_pages_error' => 'For choice type :type, total pages cannot be less than :pages',
+        'type_names' => [
+            '1' => 'Choose 4 from 8',
+            '2' => 'Choose 8 from 16'
+        ]
+    ]
 ]; 

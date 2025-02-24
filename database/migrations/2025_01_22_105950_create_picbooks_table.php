@@ -26,8 +26,10 @@ return new class extends Migration
             $table->string('none_skin')->nullable();
             $table->json('tags')->nullable();
             $table->boolean('has_choices')->default(false);  // 是否包含8选4
+            $table->tinyInteger('choices_type')->default(0);  // 选择类型
             $table->boolean('has_qa')->default(false);  // 是否包含问答
             $table->tinyInteger('status')->default(0);  // 状态：草稿、已发布、已归档等
+            $table->integer('character_count')->default(1)->comment('角色数量');
             $table->timestamps();
             $table->softDeletes();  // 添加软删除
         });

@@ -25,7 +25,8 @@ class Picbook extends Model
         'supported_skincolors',
         'none_skin',
         'tags',
-        'status'
+        'status',
+        'choices_type'
     ];
 
     protected $casts = [
@@ -36,7 +37,8 @@ class Picbook extends Model
         'price' => 'decimal:2',
         'rating' => 'decimal:2',
         'has_choices' => 'boolean',
-        'has_qa' => 'boolean'
+        'has_qa' => 'boolean',
+        'choices_type' => 'integer'
     ];
 
     // 关联绘本变体
@@ -61,5 +63,20 @@ class Picbook extends Model
     public function coverPrices()
     {
         return $this->hasMany(PicbookCoverPrice::class);
+    }
+
+    /**
+     * 获取选择页面数量
+     */
+    public function getChoicePagesCountAttribute()
+    {
+        switch ($this->choices_type) {
+            case 1:
+                return ['total' => 8, 'select' => 4];
+            case 2:
+                return ['total' => 16, 'select' => 8];
+            default:
+                return ['total' => 0, 'select' => 0];
+        }
     }
 } 

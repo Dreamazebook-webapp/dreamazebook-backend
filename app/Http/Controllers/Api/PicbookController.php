@@ -44,6 +44,11 @@ class PicbookController extends ApiController
             $query->where('currencycode', $request->currencycode);
         }
 
+        // 选择类型筛选
+        if ($request->has('choices_type')) {
+            $query->where('choices_type', $request->choices_type);
+        }
+
         // 排序
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
@@ -105,6 +110,7 @@ class PicbookController extends ApiController
             ->get();
 
         $picbook->pages = $pages;
+        $picbook->choice_pages_count = $picbook->choice_pages_count;
 
         return $this->success($picbook, __('messages.picbook.detail_success'));
     }
@@ -124,7 +130,9 @@ class PicbookController extends ApiController
                 'amount' => $picbook->price,
                 'symbol' => $picbook->pricesymbol,
                 'currency' => $picbook->currencycode
-            ]
+            ],
+            'choices_type' => $picbook->choices_type,
+            'choice_pages_count' => $picbook->choice_pages_count
         ], __('messages.picbook.options_success'));
     }
 } 

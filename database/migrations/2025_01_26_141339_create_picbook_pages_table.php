@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('mask_image_url')->nullable()->comment('AI换脸遮罩图片URL');
             $table->boolean('has_replaceable_text')->default(false)->comment('是否包含可替换文字');
             $table->json('text_elements')->nullable()->comment('可替换文字配置');
+            $table->json('character_sequence')->nullable()->comment('角色序列，如[2,1]表示从左到右的角色顺序');
             $table->timestamps();
             $table->softDeletes();
 
@@ -43,6 +44,7 @@ return new class extends Migration
             $table->text('content')->comment('页面文本内容');
             $table->json('choice_options')->nullable()->comment('选择题选项');
             $table->string('question')->nullable()->comment('选择题问题翻译');
+            $table->json('character_masks')->nullable()->comment('每个角色位置对应的蒙版图片URL，用于换肤');
             $table->timestamps();
             $table->softDeletes();
 

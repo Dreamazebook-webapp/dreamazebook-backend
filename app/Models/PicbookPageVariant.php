@@ -18,14 +18,16 @@ class PicbookPageVariant extends Model
         'image_url',
         'content',
         'choice_options',
-        'question'
+        'question',
+        'character_masks'
     ];
 
     // 将 choice_options 字段转换为数组
     protected $casts = [
         'choice_options' => 'array',
         'gender' => 'integer',
-        'skincolor' => 'integer'
+        'skincolor' => 'integer',
+        'character_masks' => 'array'
     ];
 
     /**
@@ -49,6 +51,50 @@ class PicbookPageVariant extends Model
             'page_id', // picbook_page_variants.page_id
             'picbook_id' // picbook_pages.picbook_id
         );
+    }
+
+    /**
+     * 获取指定位置的角色蒙版
+     */
+    public function getCharacterMask($position)
+    {
+        return $this->character_masks[$position] ?? null;
+    }
+
+    /**
+     * 验证角色蒙版数量是否与页面角色序列匹配
+     * 
+     * @return bool|string 验证通过返回true，否则返回错误信息
+     */
+    public function validateCharacterMasks()
+    {
+        // 如果页面没有角色序列，则不需要蒙版
+        if (empty($this->page->character_sequence)) {
+            return $this->character_masks ? __('picbook.page_variant.no_sequence_with_masks') : true;
+        }
+
+        // 如果页面有角色序列，但没有提供蒙版
+        if (empty($this->character_masks)) {
+            return __('picbook.page_variant.masks_required');
+        }
+
+        // 验证蒙版数量是否匹配
+        $sequence_count = count($this->page->character_sequence);
+        if (count($this->character_masks) !== $sequence_count) {
+            return __('picbook.page_variant.masks_count_mismatch', [
+                'masks' => count($this->character_masks),
+                'sequence' => $sequence_count
+            ]);
+        }
+
+        // 验证所有蒙版URL是否有效
+        foreach ($this->character_masks as $mask) {
+            if (empty($mask) || !is_string($mask)) {
+                return __('picbook.page_variant.invalid_mask_url');
+            }
+        }
+
+        return true;
     }
 
     /**
